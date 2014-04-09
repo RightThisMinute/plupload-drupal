@@ -80,7 +80,7 @@ function plupload_test_submit($form, &$form_state) {
     }
     else {
       // @todo: move this to element validate or something and clean up t().
-      form_set_error('pud', "Upload of {$uploaded_file['name']} failed");
+      //form_set_error('pud', "Upload of {$uploaded_file['name']} failed");
     }
   }
 }
@@ -241,7 +241,7 @@ function plupload_element_validate($element, &$form_state) {
 
     foreach (file_validate($file, $element['#upload_validators']) as $error_message) {
       $message = t('The specified file %name could not be uploaded.', array('%name' => $file->filename));
-      form_error($element, $message . ' ' . $error_message);
+      //form_error($element, $message . ' ' . $error_message);
     }
   }
 }
@@ -299,27 +299,22 @@ function plupload_element_pre_render($element) {
 }
 
 /**
- * Returns the path to the plupload library.
- */
-function _plupload_library_path() {
-  return variable_get('plupload_library_path', module_exists('libraries') ? libraries_get_path('plupload') : 'sites/all/libraries/plupload');
-}
-
-/**
- * Implements hook_library().
+ * Provides information about Plupload library.
+ *
+ * @todo This was implementing hook_library() in D7. Libraries modules is still
+ * D7 only so let's keep it in this form and figure out how to provide this later
+ * in D8 release cycle.
  */
 function plupload_library() {
-  $library_path = _plupload_library_path();
+  $library_path = \Drupal::config('plupload.settings')->get('library_path');
   $libraries['plupload'] = array(
     'title' => 'Plupload',
     'website' => 'http://www.plupload.com',
-    'version' => '1.5.1.1',
+    'version' => '2.1.1',
     'js' => array(
-      // @todo - only add gears JS if gears is an enabled runtime.
-      // $library_path . '/js/gears_init.js' => array(),
-      $library_path . '/js/jquery.plupload.queue/jquery.plupload.queue.js' => array(),
-      $library_path . '/js/plupload.full.js' => array(),
+      $library_path . '/js/plupload.full.min.js' => array(),
       0 => array(
+        // @todo: review all this settings
         'type' => 'setting',
         'data' => array(
           'plupload' => array(
@@ -328,7 +323,6 @@ function plupload_library() {
             // '_default' (Drupal element ids do not have underscores, because
             // they have hyphens instead).
             '_default' => array(
-              // @todo Provide a settings page for configuring these.
               'runtimes' => 'html5,flash,html4',
               'url' => url('plupload-handle-uploads', array('query' => array('plupload_token' => drupal_get_token('plupload-handle-uploads')))),
               'max_file_size' => file_upload_max_size() . 'b',
@@ -336,19 +330,6 @@ function plupload_library() {
               'unique_names' => TRUE,
               'flash_swf_url' => file_create_url($library_path . '/js/plupload.flash.swf'),
               'silverlight_xap_url' => file_create_url($library_path . '/js/plupload.silverlight.xap'),
-            ),
-            // The plupload.js integration file in the module folder can do
-            // additional browser checking to remove unsupported runtimes.
-            // This is in addition to what is done by the Plupload library.
-            '_requirements' => array(
-              'html5' => array(
-                // The Plupload library recognizes Firefox 3.5 as supporting
-                // HTML 5, but Firefox 3.5 does not support the HTML 5
-                // "multiple" attribute for file input controls. This makes the
-                // html5 runtime much less appealing, so we treat all Firefox
-                // versions less than 3.6 as ineligible for the html5 runtime.
-                'mozilla' => '1.9.2',
-              ),
             ),
           ),
         ),
