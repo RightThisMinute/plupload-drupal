@@ -11,6 +11,7 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 
 /**
  * Plupload upload handling route.
@@ -110,12 +111,13 @@ class UploadController implements ContainerInjectionInterface {
    */
   protected function getFilename() {
     if (empty($this->filename)) {
-      if (empty($this->request->request["name"])) {
+      try {
+        // @todo this should probably bo OO.
+        $this->filename = _plupload_fix_temporary_filename($this->request->request->get('name'));
+      }
+      catch (InvalidArgumentException $e) {
         throw new UploadException(UploadException::FILENAME_ERROR);
       }
-
-      // @todo this should probably bo OO.
-      $this->filename = _plupload_fix_temporary_filename($this->request->request["name"]);
 
       // Check the file name for security reasons; it must contain letters, numbers
       // and underscores followed by a (single) ".tmp" extension. Since this check
@@ -138,7 +140,7 @@ class UploadController implements ContainerInjectionInterface {
    * @throws \Drupal\plupload\UploadException
    */
   protected function handleUpload() {
-    $is_multipart = strpos($this->request->headers->get('Content-Type'), "multipart") !== FALSE;
+    $is_multipart = strpos($this->request->headers->get('Content-Type'), 'multipart') !== FALSE;
 
     // If this is a multipart upload there needs to be a file on the server.
     if ($is_multipart) {
@@ -148,13 +150,13 @@ class UploadController implements ContainerInjectionInterface {
     }
 
     // Open temp file.
-    if (!($out = fopen($this->temporaryUploadLocation . $this->getFilename(), empty($this->request->request["chunk"]) ? "wb" : "ab"))) {
+    if (!($out = fopen($this->temporaryUploadLocation . $this->getFilename(), $this->request->request->get('chunk', 0) ? 'ab' : 'wb'))) {
       throw new UploadException(UploadException::OUTPUT_ERROR);
     }
 
     // Read binary input stream.
-    $input_uri = $is_multipart ? $this->request->files['file']['tmp_name'] : "php://input";
-    if (!($in = fopen($input_uri, "rb"))) {
+    $input_uri = $is_multipart ? $this->request->files['file']['tmp_name'] : 'php://input';
+    if (!($in = fopen($input_uri, 'rb'))) {
       throw new UploadException(UploadException::INPUT_ERROR);
     }
 
