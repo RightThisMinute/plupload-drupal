@@ -144,7 +144,8 @@ class UploadController implements ContainerInjectionInterface {
 
     // If this is a multipart upload there needs to be a file on the server.
     if ($is_multipart) {
-      if (empty($this->request->files['file']['tmp_name']) || !is_uploaded_file($this->request->files['file']['tmp_name'])) {
+      $multipart_file = $this->request->files->get('file', array());
+      if (empty($multipart_file['tmp_name']) || !is_uploaded_file($multipart_file['tmp_name'])) {
         throw new UploadException(UploadException::MOVE_ERROR);
       }
     }
@@ -155,7 +156,7 @@ class UploadController implements ContainerInjectionInterface {
     }
 
     // Read binary input stream.
-    $input_uri = $is_multipart ? $this->request->files['file']['tmp_name'] : 'php://input';
+    $input_uri = $is_multipart ? $multipart_file['tmp_name'] : 'php://input';
     if (!($in = fopen($input_uri, 'rb'))) {
       throw new UploadException(UploadException::INPUT_ERROR);
     }
@@ -169,7 +170,7 @@ class UploadController implements ContainerInjectionInterface {
     fclose($in);
     fclose($out);
     if ($is_multipart) {
-      drupal_unlink($this->request->files['file']['tmp_name']);
+      drupal_unlink($multipart_file['tmp_name']);
     }
   }
 }
