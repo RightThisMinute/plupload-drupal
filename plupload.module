@@ -237,7 +237,11 @@ function plupload_element_pre_render($element) {
   if (empty($element['#description'])) {
     $element['#description'] = '';
   }
-  $element['#description'] = theme('file_upload_help', array('description' => $element['#description'], 'upload_validators' => $element['#upload_validators']));
+  $element['#description'] = array(
+    '#theme' => 'file_upload_help',
+    '#description' => $element['#description'],
+    '#upload_validators' => $element['#upload_validators'],
+  );
 
   $element['#attached']['js'][] = array(
     'type' => 'setting',
