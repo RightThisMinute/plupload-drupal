@@ -5,7 +5,7 @@
  * Contains \Drupal\plupload_test\PluploadTestForm
  */
 
-namespace Drupal\plupload;
+namespace Drupal\plupload_test;
 
 use Drupal\Core\Form\FormInterface;
 
