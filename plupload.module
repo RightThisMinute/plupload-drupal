@@ -159,8 +159,9 @@ function plupload_element_value(&$element, $input = FALSE, $form_state = NULL) {
 function plupload_element_process($element) {
   // Start session if not there yet. We need session if we want security
   // tokens to work properly.
-  if (!drupal_session_started()) {
-    drupal_session_start();
+  $session_manager = \Drupal::service('session_manager');
+  if (!$session_manager->isStarted()) {
+    $session_manager->start();
   }
 
   if (!isset($element['#upload_validators'])) {
