@@ -4,6 +4,6 @@ description: 'Support module for plupload test.'
 package: Testing
 version: VERSION
 core: 8.x
-hidden: true
+#hidden: true
 dependencies:
   - plupload
