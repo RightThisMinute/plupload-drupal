@@ -1,0 +1,17 @@
+plupload:
+  title: 'Plupload'
+  website: http://www.plupload.com
+  version: 2.1.1
+  js:
+    /libraries/plupload/js/plupload.full.min.js: {}
+    /libraries/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js: {}
+  settings:
+    plupload:
+      _default:
+        runtimes: 'html5,flash,html4'
+        url: plupload-handle-uploads #, array('query' => array('plupload_token' => drupal_get_token('plupload-handle-uploads')))),
+        max_file_size: 100b #file_upload_max_size() . 'b'
+        chunk_size: 100b #parse_size(ini_get('post_max_size')) . 'b',
+        unique_names: TRUE
+        flash_swf_url: /libraries/plupload/js/plupload.flash.swf
+        silverlight_xap_url: /libraries/plupload/js/plupload.silverlight.xap

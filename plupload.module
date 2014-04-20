@@ -6,34 +6,6 @@
  */
 
 /**
- * Submit callback for plupload_test form.
- */
-function plupload_test_submit($form, &$form_state) {
-  $saved_files = array();
-  $scheme = variable_get('file_default_scheme', 'public') . '://';
-  // We can't use file_save_upload() because of
-  // http://www.jacobsingh.name/content/tight-coupling-no-not
-  // file_uri_to_object();
-  foreach ($form_state['values']['pud'] as $uploaded_file) {
-    if ($uploaded_file['status'] == 'done') {
-      $source = $uploaded_file['tmppath'];
-      $destination = file_stream_wrapper_uri_normalize($scheme . $uploaded_file['name']);
-      // Rename it to its original name, and put it in its final home.
-      // Note - not using file_move here because if we call file_get_mime
-      // (in file_uri_to_object) while it has a .tmp extension, it horks.
-      $destination = file_unmanaged_move($source, $destination, FILE_EXISTS_RENAME);
-      $file = plupload_file_uri_to_object($destination);
-      file_save($file);
-      $saved_files[] = $file;
-    }
-    else {
-      // @todo: move this to element validate or something and clean up t().
-      //form_set_error('pud', "Upload of {$uploaded_file['name']} failed");
-    }
-  }
-}
-
-/**
  * Implements hook_element_info().
  */
 function plupload_element_info() {
@@ -42,13 +14,11 @@ function plupload_element_info() {
   $types['plupload'] = array(
     '#input' => TRUE,
     '#attributes' => array('class' => array('plupload-element')),
-    // @todo
-    // '#element_validate' => array('file_managed_file_validate'),
     '#theme_wrappers' => array('form_element'),
     '#theme' => 'container',
     '#value_callback' => 'plupload_element_value',
     '#attached' => array(
-      'library' => array(array('plupload', 'plupload')),
+      'library' => array('plupload/plupload'),
       'js' => array($module_path . '/plupload.js'),
       'css' => array($module_path . '/plupload.css'),
     ),
@@ -119,7 +89,7 @@ function plupload_element_value(&$element, $input = FALSE, $form_state = NULL) {
 
 
         // Based on the same feture from file_save_upload().
-        if (!variable_get('allow_insecure_uploads', 0) && preg_match('/\.(php|pl|py|cgi|asp|js)(\.|$)/i', $value) && (substr($value, -4) != '.txt')) {
+        if (!\Drupal::config('system.file')->get('allow_insecure_uploads') && preg_match('/\.(php|pl|py|cgi|asp|js)(\.|$)/i', $value) && (substr($value, -4) != '.txt')) {
           $value .= '.txt';
 
           // The .txt extension may not be in the allowed list of extensions.
@@ -138,12 +108,10 @@ function plupload_element_value(&$element, $input = FALSE, $form_state = NULL) {
         // We also define an extra key 'tmppath' which is useful so that submit
         // handlers do not need to know which directory plupload stored the
         // temporary files in before trying to copy them.
-        $files[$i]['tmppath'] = variable_get('plupload_temporary_uri', 'temporary://') . $value;
+        $files[$i]['tmppath'] = \Drupal::config('plupload.settings')->get('temporary_uri') . $value;
       }
       elseif ($key == 'name') {
-        if (module_exists('transliteration') && variable_get('transliteration_file_uploads', TRUE)) {
-          $value = transliteration_clean_filename($value);
-        }
+        $value = \Drupal::service('transliteration')->transliterate($value);
       }
 
       // Store the final value in the array we will return.
@@ -183,7 +151,7 @@ function plupload_element_validate($element, &$form_state) {
     // extension checks.
     $file = plupload_file_uri_to_object($file_info['tmppath']);
 
-    $destination = variable_get('file_default_scheme', 'public') . '://' . $file_info['name'];
+    $destination = \Drupal::config('system.file')->get('default_scheme') . '://' . $file_info['name'];
     $destination = file_stream_wrapper_uri_normalize($destination);
     $file->filename = drupal_basename($destination);
     $file->filemime = file_get_mimetype($destination);
@@ -252,58 +220,12 @@ function plupload_element_pre_render($element) {
 }
 
 /**
- * Provides information about Plupload library.
- *
- * @todo This was implementing hook_library() in D7. Libraries modules is still
- * D7 only so let's keep it in this form and figure out how to provide this later
- * in D8 release cycle.
+ * Implements hook_library_info_alter().
  */
-function plupload_library() {
-  $library_path = \Drupal::config('plupload.settings')->get('library_path');
-  $libraries['plupload'] = array(
-    'title' => 'Plupload',
-    'website' => 'http://www.plupload.com',
-    'version' => '2.1.1',
-    'js' => array(
-      $library_path . '/js/plupload.full.min.js' => array(),
-      0 => array(
-        // @todo: review all this settings
-        'type' => 'setting',
-        'data' => array(
-          'plupload' => array(
-            // Element-specific settings get keyed by the element id (see
-            // plupload_element_pre_render()), so put default settings in
-            // '_default' (Drupal element ids do not have underscores, because
-            // they have hyphens instead).
-            '_default' => array(
-              'runtimes' => 'html5,flash,html4',
-              'url' => url('plupload-handle-uploads', array('query' => array('plupload_token' => drupal_get_token('plupload-handle-uploads')))),
-              'max_file_size' => file_upload_max_size() . 'b',
-              'chunk_size' => parse_size(ini_get('post_max_size')) . 'b',
-              'unique_names' => TRUE,
-              'flash_swf_url' => file_create_url($library_path . '/js/plupload.flash.swf'),
-              'silverlight_xap_url' => file_create_url($library_path . '/js/plupload.silverlight.xap'),
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
-
-  if (module_exists('locale')) {
-    $module_path = drupal_get_path('module', 'plupload');
-    $libraries['plupload']['js'][$module_path . '/js/i18n.js'] = array('scope' => 'footer');
+function plupload_library_info_alter(&$library_definition, $extension) {
+  if ($extension == 'plupload' && \Drupal::service('module_handler')->moduleExists('locale')) {
+    $library_definition['plupload']['js']['js/i18n.js'] = array('scope' => 'footer');
   }
-
-  return $libraries;
-}
-
-/**
- * Callback that handles and saves uploaded files.
- *
- * This will respond to the URL on which plupoad library will upload files.
- */
-function plupload_handle_uploads() {
 }
 
 /**

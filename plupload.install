@@ -10,7 +10,6 @@
  */
 function plupload_requirements($phase) {
   $requirements = array();
-  $library_path = \Drupal::config('plupload.settings')->get('library_path');
 
   if ($phase == 'runtime') {
     $requirements['plupload'] = array(
@@ -18,7 +17,7 @@ function plupload_requirements($phase) {
       'value' => \Drupal::translation()->translate('Unknown'),
     );
     $requirements['plupload']['severity'] = REQUIREMENT_OK;
-    $libraries = plupload_library();
+    $libraries = \Drupal::service('library.discovery')->getLibrariesByExtension('plupload');
     $library = $libraries['plupload'];
 
     // Check if Plupload library exists. Try to determine it's version
@@ -45,13 +44,13 @@ function plupload_requirements($phase) {
 
     $requirements['plupload']['value'] = empty($installed_version) ? \Drupal::translation()->translate('Not found') : $installed_version;
 
-    if (file_exists($library_path . '/examples/upload.php')) {
+    if (file_exists('libraries/plupload/js/examples/upload.php')) {
       $requirements['plupload_examples'] = array(
         'title' => \Drupal::translation()->translate('Plupload example folder'),
         'value' => \Drupal::translation()->translate('Example folder found'),
         'description' => \Drupal::translation()->translate('Plupload library contains example files, these could constitute a security risk to your site as per <a href="!url">PSA-2011-02</a>. Please remove the !path folder immediately.', array(
           '!url' => 'http://drupal.org/node/1189632',
-          '!path' => $library_path . '/examples'
+          '!path' => 'libraries/plupload/js/examples'
         )),
         'severity' => REQUIREMENT_ERROR
       );
@@ -68,12 +67,11 @@ function plupload_requirements($phase) {
  *   TRUE if plupload library installed, FALSE otherwise.
  */
 function _plupload_requirements_installed() {
-  $libraries = plupload_library();
+  $libraries = \Drupal::service('library.discovery')->getLibrariesByExtension('plupload');
   $library = $libraries['plupload'];
 
   // We grab the first file and check if it exists.
-  $testfile = key($library['js']);
-  if (!file_exists($testfile)) {
+  if (!file_exists($library['js'][0]['data'])) {
     return FALSE;
   }
 
@@ -87,18 +85,18 @@ function _plupload_requirements_installed() {
  *   The version of installed Plupload or NULL if unable to detect version.
  */
 function _plupload_requirements_version() {
-  $library_path = \Drupal::config('plupload.settings')->get('library_path');
-  $jspath = $library_path . '/js/plupload.min.js';
+  $libraries = \Drupal::service('library.discovery')->getLibrariesByExtension('plupload');
+  $library = $libraries['plupload'];
 
   // Read contents of Plupload's javascript file.
-  $configcontents = @file_get_contents($jspath);
+  $configcontents = @file_get_contents($library['js'][0]['data']);
   if (!$configcontents) {
     return NULL;
   }
 
   // Search for version string using a regular expression.
   $matches = array();
-  if (preg_match('#v(\d+[\.\d+]*)#', $configcontents, $matches)) {
+  if (preg_match("#Plupload.*v(\d+[\.\d+]*)#s", $configcontents, $matches)) {
     return $matches[1];
   }
 
