@@ -44,8 +44,5 @@ class PluploadTestForm implements FormInterface {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, array &$form_state) {
-    dpm($form_state);
-    file_move()
-  }
+  public function submitForm(array &$form, array &$form_state) {}
 }
