@@ -4,5 +4,5 @@ plupload.upload:
     _content: '\Drupal\plupload\UploadController::handleUploads'
     _title: 'Handles uploads'
   requirements:
-    _permission: 'access content'
+    _permission: 'access_content'
     _csrf_token: 'TRUE'

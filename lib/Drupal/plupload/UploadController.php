@@ -52,7 +52,7 @@ class UploadController implements ContainerInjectionInterface {
    */
   public function __construct(Request $request) {
     $this->request = $request;
-    $this->temporaryUploadLocation = \Drupal::config('plupload.settings')->get('temporary_uri', 'temporary://');
+    $this->temporaryUploadLocation = \Drupal::config('plupload.settings')->get('temporary_uri');
   }
 
   /**

@@ -149,16 +149,20 @@ function plupload_element_validate($element, &$form_state) {
     // Using tmp path will give validators access to the actual file on disk and
     // filesize information. We manually modify filename and mime to allow
     // extension checks.
-    $file = plupload_file_uri_to_object($file_info['tmppath']);
-
     $destination = \Drupal::config('system.file')->get('default_scheme') . '://' . $file_info['name'];
     $destination = file_stream_wrapper_uri_normalize($destination);
-    $file->filename = drupal_basename($destination);
-    $file->filemime = file_get_mimetype($destination);
+    $file = entity_create('file', array(
+      'uri' => $file_info['tmppath'],
+      'uid' => \Drupal::currentUser()->id(),
+      'status' => FILE_STATUS_PERMANENT,
+      'filename' => drupal_basename($destination),
+      'filemime' => file_get_mimetype($destination),
+    ));
 
     foreach (file_validate($file, $element['#upload_validators']) as $error_message) {
-      $message = t('The specified file %name could not be uploaded.', array('%name' => $file->filename));
-      //form_error($element, $message . ' ' . $error_message);
+      $message = t('The specified file %name could not be uploaded.', array('%name' => $file->getFilename()));
+      $concatenated_message = $message . ' ' . $error_message;
+      \Drupal::formBuilder()->setError($element, $concatenated_message);
     }
   }
 }
@@ -168,6 +172,16 @@ function plupload_element_validate($element, &$form_state) {
  */
 function plupload_element_pre_render($element) {
   $settings = isset($element['#plupload_settings']) ? $element['#plupload_settings'] : array();
+
+  // Set upload URL.
+  if (empty($settings['url'])) {
+    $settings['url'] = url(
+      'plupload-handle-uploads',
+      array(
+        'query' => array('token' => \Drupal::csrfToken()->get('plupload-handle-uploads'))
+      )
+    );
+  }
 
   // The Plupload library supports client-side validation of file extension, so
   // pass along the information for it to do that. However, as with all client-
@@ -221,39 +235,18 @@ function plupload_element_pre_render($element) {
 
 /**
  * Implements hook_library_info_alter().
+ *
+ * Adds dynamic parts of library definition.
  */
 function plupload_library_info_alter(&$library_definition, $extension) {
-  if ($extension == 'plupload' && \Drupal::service('module_handler')->moduleExists('locale')) {
-    $library_definition['plupload']['js']['js/i18n.js'] = array('scope' => 'footer');
-  }
-}
+  if ($extension == 'plupload') {
+    $library_definition['plupload']['settings']['plupload']['_default']['max_file_size'] = file_upload_max_size() . 'b';
+    $library_definition['plupload']['settings']['plupload']['_default']['chunk_size'] = parse_size(ini_get('post_max_size')) . 'b';
 
-/**
- * Returns a file object which can be passed to file_save().
- *
- * @param string $uri
- *   A string containing the URI, path, or filename.
- *
- * @return boolean
- *   A file object, or FALSE on error.
- *
- * @todo Replace with calls to this function with file_uri_to_object() when
- * http://drupal.org/node/685818 is fixed in core.
- */
-function plupload_file_uri_to_object($uri) {
-  global $user;
-  $uri = file_stream_wrapper_uri_normalize($uri);
-  $wrapper = file_stream_wrapper_get_instance_by_uri($uri);
-  $file = new StdClass();
-  $file->uid = $user->uid;
-  $file->filename = drupal_basename($uri);
-  $file->uri = $uri;
-  $file->filemime = file_get_mimetype($uri);
-  // This is gagged because some uris will not support it.
-  $file->filesize = @filesize($uri);
-  $file->timestamp = REQUEST_TIME;
-  $file->status = FILE_STATUS_PERMANENT;
-  return $file;
+    if (\Drupal::service('module_handler')->moduleExists('locale')) {
+      $library_definition['plupload']['js']['js/i18n.js'] = array('scope' => 'footer');
+    }
+  }
 }
 
 /**
