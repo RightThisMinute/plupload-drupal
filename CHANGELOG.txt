@@ -1,4 +1,8 @@
-CHANGELOG for Plupload integration for Drupal 7
+CHANGELOG for Plupload integration for Drupal 8
+
+Plupload integration 8.x-1.x-dev
+=================================
+- by slashrsm: Initial port to Drupal 8.
 
 Plupload integration 7.x-1.x-dev
 =================================
