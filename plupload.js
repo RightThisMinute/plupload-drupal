@@ -23,7 +23,7 @@ Drupal.plupload.uploadCompleteCallback = function(up, files) {
  */
 Drupal.behaviors.plupload = {
   attach: function (context, settings) {
-    $(".plupload-element", context).once('plupload-init', function () {
+    $(".plupload-element", context).once('plupload-init').each(function () {
       var $this = $(this);
 
       // Merge the default settings and the element settings to get a full
@@ -87,7 +87,7 @@ Drupal.behaviors.plupload = {
   */
 Drupal.behaviors.pluploadform = {
   attach: function(context, settings) {
-    $('form', context).once('plupload-form', function() {
+    $('form', context).once('plupload-form').each(function() {
       if (0 < $(this).find('.plupload-element').length) {
         var $form = $(this);
         var originalFormAttributes = {

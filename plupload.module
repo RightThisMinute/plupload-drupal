@@ -7,7 +7,9 @@
 
 /**
  * Implements hook_element_info().
- */
+ *
+ * note: moved to PlUploadFile::getInfo(). It should be removed.
+*/
 function plupload_element_info() {
   $types = array();
   $module_path = drupal_get_path('module', 'plupload');
@@ -31,6 +33,8 @@ function plupload_element_info() {
 
 /**
  * Validate callback for plupload form element.
+ *
+ * note: moved to PlUploadFile::valueCallback().
  */
 function plupload_element_value(&$element, $input = FALSE, $form_state = NULL) {
   $id = $element['#id'];
@@ -123,6 +127,8 @@ function plupload_element_value(&$element, $input = FALSE, $form_state = NULL) {
 
 /**
  * Process callback (#process) for plupload form element.
+ *
+ * note: moved to PlUploadFile::processPlUploadFile(). It should be removed
  */
 function plupload_element_process($element) {
   // Start session if not there yet. We need session if we want security
@@ -141,6 +147,8 @@ function plupload_element_process($element) {
 
 /**
  * Element validation handler for a Plupload element.
+ *
+ * note: moved to PlUploadFile::validatePlUploadFile(). It should be removed
  */
 function plupload_element_validate($element, &$form_state) {
   foreach ($element['#value'] as $file_info) {
@@ -169,6 +177,8 @@ function plupload_element_validate($element, &$form_state) {
 
 /**
  * Pre render (#pre_render) callback to attach JS settings for the element.
+ *
+ * note: moved to PlUploadFile::preRenderPlUploadFile(). It should be removed
  */
 function plupload_element_pre_render($element) {
   $settings = isset($element['#plupload_settings']) ? $element['#plupload_settings'] : array();
@@ -241,8 +251,7 @@ function plupload_element_pre_render($element) {
 function plupload_library_info_alter(&$library_definition, $extension) {
   if ($extension == 'plupload') {
     $library_definition['plupload']['settings']['plupload']['_default']['max_file_size'] = file_upload_max_size() . 'b';
-    $library_definition['plupload']['settings']['plupload']['_default']['chunk_size'] = parse_size(ini_get('post_max_size')) . 'b';
-
+    $library_definition['plupload']['settings']['plupload']['_default']['chunk_size'] = Drupal\Component\Utility\Bytes::toInt(ini_get('post_max_size')) . 'b';
     if (\Drupal::service('module_handler')->moduleExists('locale')) {
       $library_definition['plupload']['js']['js/i18n.js'] = array('scope' => 'footer');
     }
