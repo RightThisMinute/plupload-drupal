@@ -246,7 +246,14 @@ class PlUploadFile extends FormElement {
       '#upload_validators' => $element['#upload_validators'],
     );
 
-    $element['#attached']['drupalSettings']['plupload'] = array($element['#id'] => $settings);
+    // Global settings
+    $library_discovery = \Drupal::service('library.discovery');
+    $library = $library_discovery->getLibraryByName('plupload', 'plupload');
+    
+    $element['#attached']['drupalSettings']['plupload'] = array(
+      '_default' => $library['settings']['plupload']['_default'],
+      $element['#id'] => $settings
+    );
 
     return $element;
   }
