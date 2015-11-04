@@ -26,7 +26,7 @@ function plupload_requirements($phase) {
       $message = 'The <a href="@url">@title</a> library (version @version or higher) is not installed.';
       $args = array(
         '@title' => $library['title'],
-        '@url' => url($library['website']),
+        '@url' => $library['website'],
         '@version' => $library['version'],
       );
 
