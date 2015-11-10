@@ -44,13 +44,13 @@ function plupload_requirements($phase) {
 
     $requirements['plupload']['value'] = empty($installed_version) ? \Drupal::translation()->translate('Not found') : $installed_version;
 
-    if (file_exists('libraries/plupload/js/examples/upload.php')) {
+    if (file_exists('libraries/plupload/examples/upload.php')) {
       $requirements['plupload_examples'] = array(
         'title' => \Drupal::translation()->translate('Plupload example folder'),
         'value' => \Drupal::translation()->translate('Example folder found'),
         'description' => \Drupal::translation()->translate('Plupload library contains example files, these could constitute a security risk to your site as per <a href="!url">PSA-2011-02</a>. Please remove the !path folder immediately.', array(
           '!url' => 'http://drupal.org/node/1189632',
-          '!path' => 'libraries/plupload/js/examples'
+          '!path' => 'libraries/plupload/examples'
         )),
         'severity' => REQUIREMENT_ERROR
       );
