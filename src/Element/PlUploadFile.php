@@ -283,7 +283,7 @@ class PlUploadFile extends FormElement {
       foreach (file_validate($file, $element['#upload_validators']) as $error_message) {
         $message = t('The specified file %name could not be uploaded.', array('%name' => $file->getFilename()));
         $concatenated_message = $message . ' ' . $error_message;
-        \Drupal::formBuilder()->setError($element, $concatenated_message);
+        $form_state->setError($element, $concatenated_message);
       }
     }
   }
