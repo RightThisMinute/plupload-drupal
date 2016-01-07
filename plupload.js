@@ -8,7 +8,7 @@ Drupal.plupload.filesAddedCallback = function (up, files) {
 Drupal.plupload.uploadCompleteCallback = function(up, files) {
   var $this = $("#"+up.settings.container);
   // If there is submit_element trigger it.
-  var submit_element = window.Drupal.settings.plupload[$this.attr('id')].submit_element;
+  var submit_element = drupalSettings.plupload[$this.attr('id')].submit_element;
   if (submit_element) {
     $(submit_element).click();
   }
@@ -68,7 +68,17 @@ Drupal.behaviors.plupload = {
           var callback = elementSettings['init'][key].split('.');
           var fn = window;
           for (var j = 0; j < callback.length; j++) {
-            fn = fn[callback[j]];
+            if (typeof (fn[callback[j]]) != "undefined") {
+              fn = fn[callback[j]];
+            }
+            else {
+              // Drupal.announce might be introduced in 8.1
+              // https://www.drupal.org/node/77245
+              if (Drupal.announce) {
+                Drupal.announce('Plupload callback not defined: ' + fn + '.' + callback[j]);
+              }
+              break;
+            }
           }
           if (typeof fn === 'function') {
             pluploadSettings.init[key] = fn;
