@@ -1,6 +1,6 @@
 /**
  * @file
- *  Localization file for Plupload's strings.
+ * Localization file for Plupload's strings.
  */
 
 // Add translations.
