@@ -11,7 +11,7 @@
     }, 100);
   };
   Drupal.plupload.uploadCompleteCallback = function(up, files) {
-    var $this = $("#" + up.settings.container);
+    var $this = $(up.settings.container);
     // If there is submit_element trigger it.
     var submit_element = drupalSettings.plupload[$this.attr('id')].submit_element;
     if (submit_element) {
