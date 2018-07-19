@@ -52,7 +52,7 @@ class PlUploadFile extends FormElement {
 
     $id = $element['#id'];
     // If a unique identifier added with '--', we need to exclude it.
-    if (preg_match('/(.*)(--[0-9]+)$/', $id, $reg)) {
+    if (preg_match('/(.*)(--[0-9A-Za-z]+)$/', $id, $reg)) {
       $id = $reg[1];
     }
 
@@ -62,9 +62,9 @@ class PlUploadFile extends FormElement {
 
     $files = array();
     foreach ($input as $key => $value) {
-      if (preg_match('/' . $id . '_([0-9]+)_(.*)/', $key, $reg)) {
-        $i = $reg[1];
-        $key = $reg[2];
+      if (preg_match('/' . $id . '(--([0-9A-Za-z_-]+))?_([0-9]+)_(tmpname|name|status)/', $key, $reg)) {
+        $i = $reg[3];
+        $key = $reg[4];
 
         // Only add the keys we expect.
         if (!in_array($key, array('tmpname', 'name', 'status'))) {
