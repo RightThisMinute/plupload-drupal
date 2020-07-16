@@ -1,0 +1,7 @@
+{
+    "name": "drupal/plupload",
+    "description": "Provides a plupload Form API element.",
+    "type": "drupal-module",
+    "license": "GPLv2",
+    "require": {}
+}
