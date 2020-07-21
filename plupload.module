@@ -6,6 +6,7 @@
  */
 
 use Drupal\Component\Utility\Bytes;
+use Drupal\plupload\UploadController;
 
 /**
  * Implements hook_library_info_alter().
@@ -51,7 +52,13 @@ function _plupload_fix_temporary_filename($filename) {
   if ($pos !== FALSE) {
     $filename = substr_replace($filename, '.tmp', $pos);
   }
-  return $filename;
+
+  [$base, $ext] = explode('.', $filename, 2);
+  $base = trim($base);
+  $regex = '/[^' . UploadController::ALLOWED_FILENAME_CHARS . ']/';
+  $base = preg_replace($regex, '-', $base);
+
+  return "$base.$ext";
 }
 
 /**

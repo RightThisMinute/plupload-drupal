@@ -13,6 +13,8 @@ use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
  */
 class UploadController implements ContainerInjectionInterface {
 
+  const ALLOWED_FILENAME_CHARS = '\w\d\-\.';
+
   /**
    * The current request.
    *
@@ -121,7 +123,8 @@ class UploadController implements ContainerInjectionInterface {
       // fortunate, because it would be difficult for us to get the correct list of
       // allowed extensions to pass in to file_munge_filename() from this point in
       // the code (outside the form API).
-      if (!preg_match('/^\w+\.tmp$/', $this->filename)) {
+      $regex = '/^[' . self::ALLOWED_FILENAME_CHARS . ']+\.tmp$/';
+      if (!preg_match($regex, $this->filename)) {
         throw new UploadException(UploadException::FILENAME_ERROR);
       }
     }
